@@ -4,6 +4,7 @@
 //
 //  Created by guomiao on 2023/5/21.
 //
+#pragma once
 
 #ifndef DebugShader_hpp
 #define DebugShader_hpp

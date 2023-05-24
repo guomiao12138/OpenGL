@@ -1,14 +1,11 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
-#include "DebugShader.hpp"
-#include <string>
-#include <fstream>
-
+#include "Tool/Utils.hpp"
+#include <glm.hpp>
+#include <gtc/matrix_transform.hpp>
+#include <gtc/type_ptr.hpp>
 using namespace::std;
-extern void PrintShaderLog(GLuint shader);
-extern void CheckOpenGLError();
-extern void PrintProgram(int Program);
 
 #define numVAOs 1
 
@@ -17,75 +14,16 @@ GLuint vao[numVAOs];
 
 float x = 0.0f; //三角形X轴位置
 float inc = 0.01f; //移动三角形的偏移量
+float temp = 1.0f;
+GLfloat sizes[] = {};
+GLfloat pointSize = 30.0f;
 
-string ReadShaderSource(const char* filePath)
-{
-    string content;
-    ifstream fileStream(filePath, ios::in);
-
-    string line = "";
-    while (!fileStream.eof()) {
-        getline(fileStream, line);
-        content.append(line + "\n");
-    }
-
-    cout << line << endl;
-    fileStream.close();
-    return content;
-}
-
-GLuint createShaderProgram(){
-    
-    GLint vertCompiled;
-    GLint fragCompiled;
-    GLint linked;
-    
-    string vertShaderStr = ReadShaderSource("/Users/guomiao/Documents/OpenGL/OpenGL/OpenGL/vertShader.glsl");
-    string fragShaderStr = ReadShaderSource("/Users/guomiao/Documents/OpenGL/OpenGL/OpenGL/fragShader.glsl");
-
-    const char* vertShaderSrc = vertShaderStr.c_str();
-    const char* fragShaderSrc = fragShaderStr.c_str();
-    
-    GLuint vShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vShader, 1, &vertShaderSrc, NULL);
-    glCompileShader(vShader);
-    CheckOpenGLError();
-    glGetShaderiv(vShader, GL_COMPILE_STATUS, &vertCompiled);
-    if(vertCompiled != 1)
-    {
-        cout << "vertex compilation failed" << endl;
-        PrintShaderLog(vShader);
-    }
-    
-    GLuint fShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fShader, 1, &fragShaderSrc, NULL);
-    glCompileShader(fShader);
-    CheckOpenGLError();
-    glGetShaderiv(fShader, GL_COMPILE_STATUS, &fragCompiled);
-    if(fragCompiled != 1)
-    {
-        cout << "fragment compilation failed" << endl;
-        PrintShaderLog(fShader);
-    }
-
-    GLuint vfProgram = glCreateProgram();
-    glAttachShader(vfProgram, vShader);
-    glAttachShader(vfProgram, fShader);
-    glLinkProgram(vfProgram);
-    CheckOpenGLError();
-    glGetProgramiv(vfProgram, GL_LINK_STATUS, &linked);
-    if(linked != 1)
-    {
-        cout << "linking faild" << endl;
-        PrintProgram(vfProgram);
-    }
-    
-    return vfProgram;
-}
+const char* vertexShader = "/Users/guomiao/Documents/OpenGL/OpenGL/OpenGL/vertShader.glsl";
+const char* fragmentShader = "/Users/guomiao/Documents/OpenGL/OpenGL/OpenGL/fragShader.glsl";
 
 void init(GLFWwindow* window)
 {
-    renderingProgram = createShaderProgram();
+    renderingProgram =  Utils::CreateShaderProgram(vertexShader, fragmentShader);
     glGenVertexArrays(numVAOs, vao);
     glBindVertexArray(vao[0]);
 }
@@ -112,11 +50,23 @@ void display(GLFWwindow* window, double currentTime)
     glUniform1f(offsetLoc, x);
     
     
-    glPointSize(30.0f);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    pointSize += temp;
 
+    if(pointSize <= 20.0f)
+    {
+        temp = 1.0f;
+    }
+    if(pointSize >= 40.0f)
+    {
+        temp = -1.0f;
+    }
     
-
+    glPointSize(pointSize);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+    
+//    glGetFloatv(GL_POINT_SIZE_RANGE, sizes);
+//
+//    cout << sizes[1] << endl;
 }
 
 
@@ -147,7 +97,6 @@ int main()
 
         glfwSwapBuffers(window);
         glfwPollEvents();
-
     }
 
     glfwDestroyWindow(window);
